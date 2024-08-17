@@ -1,0 +1,37 @@
+@import "../styles/mixins";
+@import "../styles/variables";
+
+@mixin center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wrapper {
+  .top-navigation {
+    @include center;
+    background-color: orange;
+    height: 80px;
+    margin-bottom: $space-xxl;
+
+    .logo {
+      text-align: center;
+      margin: 0;
+      font-size: $text-xxl;
+    }
+  }
+
+  .main {
+    max-width: 60%;
+    justify-content: center;
+    margin: auto;
+
+    @media screen and (max-width: $breakpoint-sm) {
+      max-width: 80%;
+    }
+
+    @media screen and (max-width: $breakpoint-xs) {
+      max-width: 100%;
+    }
+  }
+}

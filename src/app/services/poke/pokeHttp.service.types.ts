@@ -13,7 +13,7 @@ export interface IPokemon {
   location_area_encounters: string
   moves: IMove[]
   species: ISpecies
-  sprites: ISprites
+  sprites: ISprites 
   stats: IStat[]
   types: IType[]
 }
