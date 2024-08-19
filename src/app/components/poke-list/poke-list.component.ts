@@ -4,6 +4,7 @@ import { capitalize } from '../../../helpers/strings'
 import { Component } from '@angular/core'
 import { MatPaginatorModule } from '@angular/material/paginator'
 import { MatTableModule } from '@angular/material/table'
+import { Router } from '@angular/router'
 
 @Component({
   selector: 'app-poke-list',
@@ -13,11 +14,19 @@ import { MatTableModule } from '@angular/material/table'
   styleUrl: './poke-list.component.scss',
 })
 export class PokeListComponent {
+  constructor(
+    private pokeService: PokeService,
+    private router: Router,
+  ) {}
+
+  displayedColumns: string[] = ['id', 'name', 'types', 'sprite']
   pokeList: IPokemon[] = []
   loading: boolean = false
   selectedPoke: any
 
-  constructor(private pokeService: PokeService) {}
+  get capitalize() {
+    return capitalize
+  }
 
   async ngOnInit() {
     await this.fetchPokeList()
@@ -32,7 +41,7 @@ export class PokeListComponent {
         data?.results.forEach((item) => {
           this.pokeService.getPokemonByNameOrId(item.name).subscribe({
             next: (result: IPokemon) => results.push(result),
-            error: (error) => console.error(error), //TODO: Improve error handling
+            error: (error: Error) => console.error(error), //TODO: Improve error handling
             complete: () => {
               if (results?.length == data.results.length) {
                 this.pokeList = [...results]
@@ -45,12 +54,10 @@ export class PokeListComponent {
     })
   }
 
-  get capitalize() {
-    return capitalize
-  }
-
   getFormatedTypes = (types: IType[]) =>
     types.map((item, index) => capitalize(item.type.name)).join(' - ')
 
-  displayedColumns: string[] = ['id', 'name', 'types', 'sprite']
+  onRowClicked(id: string) {
+    this.router.navigate([`poke/${id}`])
+  }
 }

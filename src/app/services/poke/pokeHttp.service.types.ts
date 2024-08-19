@@ -13,7 +13,7 @@ export interface IPokemon {
   location_area_encounters: string
   moves: IMove[]
   species: ISpecies
-  sprites: ISprites 
+  sprites: ISprites
   stats: IStat[]
   types: IType[]
 }
@@ -66,14 +66,14 @@ export interface ISpecies {
 }
 
 export interface ISprites {
-  back_default: string | null
-  back_female: string | null
-  back_shiny: string | null
-  back_shiny_female: string | null
-  front_default: string | null
-  front_female: string | null
-  front_shiny: string | null
-  front_shiny_female: string | null
+  back_default: URL | null
+  back_female: URL | null
+  back_shiny: URL | null
+  back_shiny_female: URL | null
+  front_default: URL | null
+  front_female: URL | null
+  front_shiny: URL | null
+  front_shiny_female: URL | null
   other?: IOtherSprites
   versions?: TVersionSprites
 }
@@ -85,8 +85,8 @@ export interface IOtherSprites {
 }
 
 export interface IDreamWorld {
-  front_default: string | null
-  front_female: string | null
+  front_default: URL | null
+  front_female: URL | null
 }
 
 export interface IHome {
@@ -103,14 +103,14 @@ export interface IOfficialArtwork {
 export interface TVersionSprites {
   [key: string]: {
     [key: string]: {
-      back_default: string | null
-      back_female: string | null
-      back_shiny: string | null
-      back_shiny_female: string | null
-      front_default: string | null
-      front_female: string | null
-      front_shiny: string | null
-      front_shiny_female: string | null
+      back_default: URL | null
+      back_female: URL | null
+      back_shiny: URL | null
+      back_shiny_female: URL | null
+      front_default: URL | null
+      front_female: URL | null
+      front_shiny: URL | null
+      front_shiny_female: URL | null
     }
   }
 }
