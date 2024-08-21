@@ -9,6 +9,8 @@ import {
 } from '../../helpers/pokemonNormalizer'
 import { IPokemon, IType } from '../../types/pokemonApi'
 import { TEnumKeys } from '../../types/globals'
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
+import { CommonModule } from '@angular/common'
 
 const columns = {
   id: 'id',
@@ -22,7 +24,12 @@ type TColumn = TEnumKeys<typeof columns>
 @Component({
   selector: 'app-poke-list',
   standalone: true,
-  imports: [MatTableModule, MatPaginatorModule],
+  imports: [
+    MatTableModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    CommonModule,
+  ],
   templateUrl: './poke-list.component.html',
   styleUrl: './poke-list.component.scss',
 })

@@ -1,4 +1,5 @@
 <div class="mat-elevation-z8 table-container">
+  <mat-spinner *ngIf="loading"></mat-spinner>
   <table mat-table [dataSource]="pokeList">
     <ng-container [matColumnDef]="columns.id">
       <th mat-header-cell *matHeaderCellDef>{{ columns.id.toUpperCase() }}</th>

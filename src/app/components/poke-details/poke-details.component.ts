@@ -49,8 +49,7 @@ export class PokeDetailsComponent {
         },
         error: (error: Error) => console.error(error), //TODO: Improve error handling
         complete: () => {
-          this.loading = false
-          console.log(this.pokemon)
+          setTimeout(() => (this.loading = false))
         },
       })
     }
