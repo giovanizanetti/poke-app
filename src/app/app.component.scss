@@ -8,11 +8,20 @@
 }
 
 .wrapper {
+  position: relative;
+  padding: 10rem 0;
+  height: 100%;
+  overflow: scroll;
+
   .top-navigation {
     @include center;
+    position: fixed;
+    width: 100%;
+    top: 0;
     background-color: orange;
     height: 80px;
     margin-bottom: $space-xxl;
+    z-index: 3;
 
     .logo {
       text-align: center;
@@ -25,6 +34,7 @@
     max-width: 60%;
     justify-content: center;
     margin: auto;
+    // margin-top: 10rem;
 
     @media screen and (max-width: $breakpoint-sm) {
       max-width: 80%;
@@ -34,4 +44,5 @@
       max-width: 100%;
     }
   }
+  
 }

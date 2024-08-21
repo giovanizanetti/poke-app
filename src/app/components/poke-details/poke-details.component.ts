@@ -1,14 +1,25 @@
 import { Component } from '@angular/core'
 import { PokeService } from '../../services/poke/pokeHttp.service'
 import { ActivatedRoute } from '@angular/router'
-import { IPokemon } from '../../services/poke/pokeHttp.service.types'
 import { MatCardModule } from '@angular/material/card'
-import { PokemonNormalized } from '../../../helpers/pokemonNormalizer'
+import { MatGridListModule } from '@angular/material/grid-list'
+import { IPokemon } from '../../types/pokemonApi'
+import {
+  IPokemonNormalized,
+  PokemonNormalized,
+} from '../../helpers/pokemonNormalizer'
+import { CommonModule } from '@angular/common'
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
 
 @Component({
   selector: 'app-poke-details',
   standalone: true,
-  imports: [MatCardModule],
+  imports: [
+    MatCardModule,
+    CommonModule,
+    MatGridListModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './poke-details.component.html',
   styleUrl: './poke-details.component.scss',
 })
@@ -18,7 +29,7 @@ export class PokeDetailsComponent {
     private route: ActivatedRoute,
   ) {}
 
-  pokemon: IPokemon | null = null
+  pokemon: IPokemonNormalized | null = null
   loading = false
 
   get pokemonId() {
@@ -34,12 +45,12 @@ export class PokeDetailsComponent {
       this.loading = true
       this.pokeService.getPokemonByNameOrId(this.pokemonId).subscribe({
         next: (result: IPokemon) => {
-          console.log(new PokemonNormalized(result))
+          this.pokemon = new PokemonNormalized(result)
         },
         error: (error: Error) => console.error(error), //TODO: Improve error handling
         complete: () => {
           this.loading = false
-          if (this.pokemon) console.log(new PokemonNormalized(this.pokemon))
+          console.log(this.pokemon)
         },
       })
     }

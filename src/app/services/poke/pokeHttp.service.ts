@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Observable } from 'rxjs'
 import { POKE_BASE_URL } from '../../dictionary'
-import { IPokeListResponse, IPokemon } from './pokeHttp.service.types'
+import { IPokeListResponse, IPokemon } from '../../types/pokemonApi'
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +15,7 @@ export class PokeService {
     offset: number = 0,
   ): Observable<IPokeListResponse> {
     return this.http.get<IPokeListResponse>(
-      `${POKE_BASE_URL}/pokemon?limit=${limit}&offset=${offset}`,
+      `${POKE_BASE_URL}/pokemon?limit=${limit}&offset=${offset * limit}`,
     )
   }
 

@@ -1,11 +1,46 @@
 @import "../../../styles/mixins";
 @import "../../../styles/variables";
 
+//TODO: Nest selectors
+//pagination
+
+td {
+  padding: 0 1.5rem;
+}
+
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.3s ease;
+  padding: 0 24px;
 
   &:hover {
-    background-color: $dark; /* Light gray on hover */
+    background-color: $dark;
   }
+}
+
+.table-container {
+  max-height: 75vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.table-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+mat-paginator {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+.mat-column-id {
+  text-align: center;
+  max-width: 5%;
+}
+
+.mat-column-sprite {
+  max-width: 12%;
 }

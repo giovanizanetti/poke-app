@@ -1,10 +1,23 @@
 import { PokeService } from '../../services/poke/pokeHttp.service'
-import { IPokemon, IType } from '../../services/poke/pokeHttp.service.types'
-import { capitalize } from '../../../helpers/strings'
 import { Component } from '@angular/core'
-import { MatPaginatorModule } from '@angular/material/paginator'
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator'
 import { MatTableModule } from '@angular/material/table'
 import { Router } from '@angular/router'
+import {
+  IPokemonNormalized,
+  PokemonNormalized,
+} from '../../helpers/pokemonNormalizer'
+import { IPokemon, IType } from '../../types/pokemonApi'
+import { TEnumKeys } from '../../types/globals'
+
+const columns = {
+  id: 'id',
+  name: 'name',
+  types: 'types',
+  species: 'species',
+  sprite: 'sprite',
+} as const
+type TColumn = TEnumKeys<typeof columns>
 
 @Component({
   selector: 'app-poke-list',
@@ -19,45 +32,53 @@ export class PokeListComponent {
     private router: Router,
   ) {}
 
-  displayedColumns: string[] = ['id', 'name', 'types', 'sprite']
-  pokeList: IPokemon[] = []
+  displayedColumn: TColumn[] = Object.values(columns)
+  pokeList: IPokemonNormalized[] = []
   loading: boolean = false
+  count = 0
   selectedPoke: any
 
-  get capitalize() {
-    return capitalize
+  get columns() {
+    return columns
   }
 
   async ngOnInit() {
     await this.fetchPokeList()
   }
 
-  async fetchPokeList(limit: number = 1, offset: number = 0) {
+  async fetchPokeList(limit: number = 5, offset: number = 0) {
     this.loading = true
-    const results: IPokemon[] = []
+    const results: IPokemonNormalized[] = []
 
     this.pokeService.getPokemonNamesAndUrls(limit, offset).subscribe({
-      next: (data) =>
+      next: (data) => {
+        this.count = data.count
+
         data?.results.forEach((item) => {
           this.pokeService.getPokemonByNameOrId(item.name).subscribe({
-            next: (result: IPokemon) => results.push(result),
+            next: (result: IPokemon) => {
+              results.push(new PokemonNormalized(result))
+              results.sort((itemA, itemB) => itemA.id - itemB.id)
+            },
             error: (error: Error) => console.error(error), //TODO: Improve error handling
             complete: () => {
               if (results?.length == data.results.length) {
-                this.pokeList = [...results]
+                this.pokeList = results
                 this.loading = false
               }
             },
           })
-        }),
+        })
+      },
       error: (error) => console.error(error),
     })
   }
 
-  getFormatedTypes = (types: IType[]) =>
-    types.map((item, index) => capitalize(item.type.name)).join(' - ')
-
   onRowClicked(id: string) {
     this.router.navigate([`poke/${id}`])
+  }
+
+  onPaginationChange(payload: PageEvent) {
+    this.fetchPokeList(payload.pageSize, payload.pageIndex)
   }
 }

@@ -1,13 +1,41 @@
-<mat-card class="pokemon-card">
-  <!-- <mat-card-header>
-      <mat-card-title>{{ pokemon.name | titlecase }}</mat-card-title>
-      <mat-card-subtitle>Type: {{ pokemon.type | titlecase }}</mat-card-subtitle>
+<div class="wrapper">
+  <mat-spinner *ngIf="loading"></mat-spinner>
+
+  <mat-card *ngIf="pokemon" class="pokemon-card">
+    <mat-card-header>
+      <mat-card-title
+        ><h2>{{ pokemon.name }}</h2></mat-card-title
+      >
     </mat-card-header>
-    <img mat-card-image [src]="pokemon.image" alt="{{ pokemon.name }}" />
+
     <mat-card-content>
-      <p><strong>Strength:</strong> {{ pokemon.strength }}</p>
+      <mat-grid-list cols="2">
+        <mat-grid-tile>
+          <img
+            mat-card-image
+            [src]="pokemon.image.large"
+            alt="{{ pokemon.name }}"
+            width="80%"
+        /></mat-grid-tile>
+        <mat-grid-tile>
+          <section>
+            <div class="details"><strong>ID: </strong>{{ pokemon.id }}</div>
+            <div class="details">
+              <strong>Strength</strong>
+              <span>{{ pokemon.abilities }}</span>
+            </div>
+
+            <div class="details">
+              <strong>Forms:</strong> {{ pokemon.forms }}
+            </div>
+
+            <div class="details">
+              <strong>Species</strong>
+              <span>{{ pokemon.species }}</span>
+            </div>
+          </section>
+        </mat-grid-tile>
+      </mat-grid-list>
     </mat-card-content>
-    <mat-card-actions>
-      <button mat-button (click)="fetchPokemon(2)">Next Pokémon</button>
-    </mat-card-actions> -->
-</mat-card>
+  </mat-card>
+</div>
