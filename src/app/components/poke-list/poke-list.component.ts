@@ -14,7 +14,17 @@ import { CommonModule } from '@angular/common'
 import { MatCheckboxModule } from '@angular/material/checkbox'
 import { MatSelectChange, MatSelectModule } from '@angular/material/select'
 import { capitalize } from '../../helpers/strings'
-
+import { getPageData } from '../../helpers/arrays'
+import { ThFilterableComponent } from '../th-filterable/th-filterable.component'
+import { MatIconModule } from '@angular/material/icon'
+import {
+  MatFormFieldControl,
+  MatFormFieldModule,
+} from '@angular/material/form-field'
+import { MatSortModule } from '@angular/material/sort'
+import { MatInputModule } from '@angular/material/input'
+import { FormsModule } from '@angular/forms'
+import { debounced } from '../../helpers/inputField'
 const columns = {
   id: 'Id',
   name: 'Name',
@@ -34,6 +44,14 @@ type TColumn = TEnumKeys<typeof columns>
     MatCheckboxModule,
     MatSelectModule,
     CommonModule,
+    ThFilterableComponent,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    FormsModule,
   ],
   templateUrl: './poke-list.component.html',
   styleUrl: './poke-list.component.scss',
@@ -44,30 +62,43 @@ export class PokeListComponent {
     private router: Router,
   ) {}
 
+  pageSizeOptions = [5, 10, 15]
   displayedColumn: TColumn[] = Object.values(columns)
   pokeList: IPokemonNormalized[] = []
   loading: boolean = false
   count = 0
-  limit = 5
+  perPage = 5
   pageIndex = 0
   typeFilterOptions: INamedAPIResource[] = []
+  nameSearchTerm: null | string = null
 
-  typeFilters: { active: INamedAPIResource[]; results: IPokemonNormalized[] } =
-    {
-      results: [],
-      active: [],
-    }
+  typeFilters: {
+    active: INamedAPIResource[]
+    results?: IPokemonNormalized[]
+  } | null = null
+
+  get capitalize() {
+    return capitalize
+  }
 
   get columns() {
     return columns
   }
 
   get listData() {
-    return //DO SOME LOGIC HERE TO COMPUTE DATA GETTING DATA
+    const fitleredResults = this.typeFilters?.results
+    if (fitleredResults) {
+      return getPageData<IPokemonNormalized[]>(
+        this.pageIndex,
+        this.perPage,
+        fitleredResults,
+      )
+    } else return this.pokeList
   }
 
-  get capitalize() {
-    return capitalize
+  //if filtered get total from the fitlered results
+  get total() {
+    return this.typeFilters?.results?.length ?? this.count
   }
 
   async ngOnInit() {
@@ -75,26 +106,20 @@ export class PokeListComponent {
     await this.fetchTypes()
   }
 
-  async fetchPokeList(limit: number = 5, pageIndex: number = 0) {
+  async fetchPokeList(perPage: number = 5, pageIndex: number = 0) {
     this.loading = true
-    const results: IPokemonNormalized[] = []
 
-    this.pokeService.getPokemonNamesAndUrls(limit, pageIndex).subscribe({
+    this.pokeService.getPokemonNamesAndUrls(perPage, pageIndex).subscribe({
       next: (data) => {
         this.count = data.count
-
-        data?.results.forEach((item) => {
-          this.pokeService.getPokemonByNameOrId(item.name).subscribe({
-            next: (result: IPokemon) => {
-              results.push(new PokemonNormalized(result))
-              results.sort((itemA, itemB) => itemA.id - itemB.id)
-            },
-            error: (error: Error) => console.error(error), //TODO: Improve error handling
-            complete: () => {
-              this.pokeList = [...results]
+        this.pokeService.getPokemons(data.results).subscribe({
+          next: (results: IPokemonNormalized[]) => (this.pokeList = results),
+          error: (error: Error) => console.error(error), //TODO: Improve error
+          complete: () => {
+            if (data.results?.length == this.pokeList?.length) {
               this.loading = false
-            },
-          })
+            }
+          },
         })
       },
       error: (error) => console.error(error), //TODO: Improve error handling
@@ -106,19 +131,47 @@ export class PokeListComponent {
   }
 
   onPaginationChange(payload: PageEvent) {
-    this.limit = payload.pageSize
+    this.perPage = payload.pageSize
     this.pageIndex = payload.pageIndex
 
-    if (this.typeFilters.active?.length) {
-      this.getTypeFilteredList(this.typeFilters.active)
-    } else {
+    if (!this.typeFilters) {
       this.fetchPokeList(payload.pageSize, payload.pageIndex)
     }
   }
 
-  // applyEmpFilter(payload: any) {
-  //   console.log(payload, 'apply')
-  // }
+  onEnterSearchName(event: Event) {
+    if (this.nameSearchTerm) {
+      this.pokeService.getPokemonByName(this.nameSearchTerm).subscribe({
+        next: (result) => (this.pokeList = [new PokemonNormalized(result)]),
+      })
+    }
+  }
+
+  searchByName(value: string) {
+    if(!value?.length) this.onClearSearchByName()
+    this.loading = true
+
+    this.typeFilters = null
+
+    debounced(() => {
+      this.pokeService.getPokemonByName(value).subscribe({
+        next: (result) => (this.pokeList = [new PokemonNormalized(result)]),
+        error: (error) => {
+          if (error.status == 404) {
+            this.pokeList = []
+          }
+          this.loading = false
+        },
+        complete: () => (this.loading = false),
+      })
+    }, 1000)
+  }
+
+  onClearSearchByName(event?: Event) {
+    this.typeFilters = null
+    this.nameSearchTerm = ''
+    this.fetchPokeList(this.perPage, this.pageIndex)
+  }
 
   async fetchTypes() {
     this.loading = true
@@ -134,40 +187,38 @@ export class PokeListComponent {
   }
 
   async onTypesFilterSelect(payload: MatSelectChange) {
+    this.nameSearchTerm = null
     const types: INamedAPIResource[] = payload.value
-    this.typeFilters = payload.value
 
     if (payload.value?.length) {
+      this.typeFilters = {
+        active: payload.value,
+        results: [],
+      }
       this.getTypeFilteredList(types)
     } else {
+      this.typeFilters = null
       this.fetchPokeList()
     }
   }
 
   getTypeFilteredList(types: INamedAPIResource[]) {
     this.loading = true
-    const results: IPokemonNormalized[] = []
-
     this.pokeService.getPokemonByType(types).subscribe({
       next: (data) => {
-        data.forEach((item, index) => {
-          if (index < this.limit) {
-            this.pokeService.getPokemonByNameOrId(item.name).subscribe({
-              next: (result: IPokemon) => {
-                results.push(new PokemonNormalized(result))
-                results.sort((itemA, itemB) => itemA.id - itemB.id)
-              },
-              error: (error: Error) => console.error(error), //TODO: Improve error handling
-              complete: () => {
-                this.pokeList = [...results]
-                this.loading = false
-              },
-            })
-          } else return
+        this.pokeService.getTypesPokemons(data).subscribe({
+          next: (data) => {
+            if (this.typeFilters) this.typeFilters.results = data
+          },
+          error: (error: Error) => console.error(error), //TODO: Improve error handling
+          complete: () => {
+            if (data.length == this?.typeFilters?.results?.length) {
+              this.loading = false
+            }
+          },
         })
       },
       error: (error) => console.error(error), //TODO: Improve error handling
-      complete: () => (this.loading = false),
     })
   }
 }

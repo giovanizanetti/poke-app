@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
-import { forkJoin, map, Observable, pipe, take } from 'rxjs'
+import { forkJoin, map, Observable } from 'rxjs'
 import { POKE_BASE_URL } from '../../dictionary'
 import {
   INamedAPIResource,
   IPaginatedResponse,
   IPokemon,
   IPokemonTypeResponse,
-  IType,
 } from '../../types/pokemonApi'
+import {
+  IPokemonNormalized,
+  PokemonNormalized,
+} from '../../helpers/pokemonNormalizer'
 
 @Injectable({
   providedIn: 'root',
@@ -27,8 +30,24 @@ export class PokeService {
     )
   }
 
-  getPokemonByNameOrId(nameOrId: string | number): Observable<IPokemon> {
-    return this.http.get<IPokemon>(`${POKE_BASE_URL}/pokemon/${nameOrId}`)
+  getPokemonByName(nameOrId: string): Observable<IPokemon> {
+    return this.http.get<IPokemon>(
+      `${POKE_BASE_URL}/pokemon/${nameOrId.toLowerCase()}`,
+    )
+  }
+
+  getPokemons(
+    pokemonInfoData: INamedAPIResource[],
+  ): Observable<IPokemonNormalized[]> {
+    const requests = pokemonInfoData.map((item: INamedAPIResource) =>
+      this.getPokemonByName(item.name),
+    )
+
+    return forkJoin(requests).pipe(
+      map((responses: IPokemon[]) => {
+        return responses.flatMap((response) => new PokemonNormalized(response))
+      }),
+    )
   }
 
   getTypes(): Observable<IPaginatedResponse<INamedAPIResource>> {
@@ -46,10 +65,23 @@ export class PokeService {
 
     return forkJoin(requests).pipe(
       map((responses: IPokemonTypeResponse[]) => {
-        const allPokemon = responses.flatMap((response) =>
+        return responses.flatMap((response) =>
           response.pokemon.map((item) => item.pokemon),
         )
-        return Array.from(new Set(allPokemon))
+      }),
+    )
+  }
+
+  getTypesPokemons(
+    data: INamedAPIResource[],
+  ): Observable<IPokemonNormalized[]> {
+    const requests: Observable<IPokemon>[] = data.map((item) =>
+      this.getPokemonByName(item.name),
+    )
+
+    return forkJoin(requests).pipe(
+      map((responses: IPokemon[]) => {
+        return responses.flatMap((response) => new PokemonNormalized(response))
       }),
     )
   }

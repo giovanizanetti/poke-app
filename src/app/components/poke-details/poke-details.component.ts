@@ -43,7 +43,7 @@ export class PokeDetailsComponent {
   async fetchPokemon() {
     if (this.pokemonId) {
       this.loading = true
-      this.pokeService.getPokemonByNameOrId(this.pokemonId).subscribe({
+      this.pokeService.getPokemonByName(this.pokemonId).subscribe({
         next: (result: IPokemon) => {
           this.pokemon = new PokemonNormalized(result)
         },
