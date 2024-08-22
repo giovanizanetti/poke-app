@@ -7,17 +7,20 @@ import {
   IPokemonNormalized,
   PokemonNormalized,
 } from '../../helpers/pokemonNormalizer'
-import { IPokemon, IType } from '../../types/pokemonApi'
+import { INamedAPIResource, IPokemon } from '../../types/pokemonApi'
 import { TEnumKeys } from '../../types/globals'
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
 import { CommonModule } from '@angular/common'
+import { MatCheckboxModule } from '@angular/material/checkbox'
+import { MatSelectChange, MatSelectModule } from '@angular/material/select'
+import { capitalize } from '../../helpers/strings'
 
 const columns = {
-  id: 'id',
-  name: 'name',
-  types: 'types',
-  species: 'species',
-  sprite: 'sprite',
+  id: 'Id',
+  name: 'Name',
+  types: 'Types',
+  species: 'Species',
+  sprite: 'Sprite',
 } as const
 type TColumn = TEnumKeys<typeof columns>
 
@@ -28,6 +31,8 @@ type TColumn = TEnumKeys<typeof columns>
     MatTableModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
+    MatSelectModule,
     CommonModule,
   ],
   templateUrl: './poke-list.component.html',
@@ -43,21 +48,38 @@ export class PokeListComponent {
   pokeList: IPokemonNormalized[] = []
   loading: boolean = false
   count = 0
-  selectedPoke: any
+  limit = 5
+  pageIndex = 0
+  typeFilterOptions: INamedAPIResource[] = []
+
+  typeFilters: { active: INamedAPIResource[]; results: IPokemonNormalized[] } =
+    {
+      results: [],
+      active: [],
+    }
 
   get columns() {
     return columns
   }
 
-  async ngOnInit() {
-    await this.fetchPokeList()
+  get listData() {
+    return //DO SOME LOGIC HERE TO COMPUTE DATA GETTING DATA
   }
 
-  async fetchPokeList(limit: number = 5, offset: number = 0) {
+  get capitalize() {
+    return capitalize
+  }
+
+  async ngOnInit() {
+    await this.fetchPokeList()
+    await this.fetchTypes()
+  }
+
+  async fetchPokeList(limit: number = 5, pageIndex: number = 0) {
     this.loading = true
     const results: IPokemonNormalized[] = []
 
-    this.pokeService.getPokemonNamesAndUrls(limit, offset).subscribe({
+    this.pokeService.getPokemonNamesAndUrls(limit, pageIndex).subscribe({
       next: (data) => {
         this.count = data.count
 
@@ -69,15 +91,13 @@ export class PokeListComponent {
             },
             error: (error: Error) => console.error(error), //TODO: Improve error handling
             complete: () => {
-              if (results?.length == data.results.length) {
-                this.pokeList = results
-                this.loading = false
-              }
+              this.pokeList = [...results]
+              this.loading = false
             },
           })
         })
       },
-      error: (error) => console.error(error),
+      error: (error) => console.error(error), //TODO: Improve error handling
     })
   }
 
@@ -86,6 +106,68 @@ export class PokeListComponent {
   }
 
   onPaginationChange(payload: PageEvent) {
-    this.fetchPokeList(payload.pageSize, payload.pageIndex)
+    this.limit = payload.pageSize
+    this.pageIndex = payload.pageIndex
+
+    if (this.typeFilters.active?.length) {
+      this.getTypeFilteredList(this.typeFilters.active)
+    } else {
+      this.fetchPokeList(payload.pageSize, payload.pageIndex)
+    }
+  }
+
+  // applyEmpFilter(payload: any) {
+  //   console.log(payload, 'apply')
+  // }
+
+  async fetchTypes() {
+    this.loading = true
+    this.pokeService.getTypes().subscribe({
+      next: (data) => {
+        this.typeFilterOptions = data.results.filter(
+          (item) => item.name !== 'unknown' && item.name !== 'stellar',
+        )
+      },
+      error: (error: Error) => console.error(error), //TODO: Improve error handling
+      complete: () => (this.loading = false),
+    })
+  }
+
+  async onTypesFilterSelect(payload: MatSelectChange) {
+    const types: INamedAPIResource[] = payload.value
+    this.typeFilters = payload.value
+
+    if (payload.value?.length) {
+      this.getTypeFilteredList(types)
+    } else {
+      this.fetchPokeList()
+    }
+  }
+
+  getTypeFilteredList(types: INamedAPIResource[]) {
+    this.loading = true
+    const results: IPokemonNormalized[] = []
+
+    this.pokeService.getPokemonByType(types).subscribe({
+      next: (data) => {
+        data.forEach((item, index) => {
+          if (index < this.limit) {
+            this.pokeService.getPokemonByNameOrId(item.name).subscribe({
+              next: (result: IPokemon) => {
+                results.push(new PokemonNormalized(result))
+                results.sort((itemA, itemB) => itemA.id - itemB.id)
+              },
+              error: (error: Error) => console.error(error), //TODO: Improve error handling
+              complete: () => {
+                this.pokeList = [...results]
+                this.loading = false
+              },
+            })
+          } else return
+        })
+      },
+      error: (error) => console.error(error), //TODO: Improve error handling
+      complete: () => (this.loading = false),
+    })
   }
 }

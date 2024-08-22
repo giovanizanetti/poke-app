@@ -31,10 +31,10 @@ export class PokemonNormalized implements IPokemonNormalized {
     this.name = capitalize(data.name)
 
     this.image = {
-      small: data.sprites?.front_default || (data.sprites.front_shiny as URL),
-      large:
-        data.sprites?.other?.official_artwork?.front_default ||
-        (data.sprites?.other?.dream_world.front_default as URL),
+      small: (data.sprites?.front_default || data.sprites.front_shiny) as URL,
+      large: (data.sprites?.other?.official_artwork?.front_default ||
+        data.sprites?.other?.dream_world.front_default ||
+        data.sprites?.other?.home.front_default) as URL,
     }
 
     this.types = getTypes(data.types)
