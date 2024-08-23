@@ -1,6 +1,5 @@
 <div class="mat-elevation-z8 table-container">
   <mat-spinner *ngIf="loading"></mat-spinner>
-
   <table mat-table [dataSource]="listData">
     <ng-container [matColumnDef]="columns.id">
       <th mat-header-cell *matHeaderCellDef>{{ columns.id.toUpperCase() }}</th>
@@ -85,4 +84,8 @@
     aria-label="Select page of periodic elements"
     (page)="onPaginationChange($event)"
   ></mat-paginator>
+
+  <p *ngIf="emptyMessage && !loading" class="empty-message">
+    {{ emptyMessage }}
+  </p>
 </div>

@@ -3,7 +3,6 @@
 
 .table-container {
   max-height: 75vh;
-  min-height: 50vh;
   overflow-y: auto;
   position: relative;
   background: $dark;
@@ -48,5 +47,11 @@
 
   .mat-column-sprite {
     max-width: 12%;
+  }
+
+  .empty-message {
+    color: $light;
+    text-align: center;
+    padding: 1rem;
   }
 }

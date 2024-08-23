@@ -7,7 +7,7 @@ import {
   IPokemonNormalized,
   PokemonNormalized,
 } from '../../helpers/pokemonNormalizer'
-import { INamedAPIResource, IPokemon } from '../../types/pokemonApi'
+import { INamedAPIResource } from '../../types/pokemonApi'
 import { TEnumKeys } from '../../types/globals'
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
 import { CommonModule } from '@angular/common'
@@ -17,10 +17,7 @@ import { capitalize } from '../../helpers/strings'
 import { getPageData } from '../../helpers/arrays'
 import { ThFilterableComponent } from '../th-filterable/th-filterable.component'
 import { MatIconModule } from '@angular/material/icon'
-import {
-  MatFormFieldControl,
-  MatFormFieldModule,
-} from '@angular/material/form-field'
+import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatSortModule } from '@angular/material/sort'
 import { MatInputModule } from '@angular/material/input'
 import { FormsModule } from '@angular/forms'
@@ -71,6 +68,7 @@ export class PokeListComponent {
   pageIndex = 0
   typeFilterOptions: INamedAPIResource[] = []
   nameSearchTerm: null | string = null
+  emptyMessage: string | null = null
 
   typeFilters: {
     active: INamedAPIResource[]
@@ -87,13 +85,18 @@ export class PokeListComponent {
 
   get listData() {
     const fitleredResults = this.typeFilters?.results
-    if (fitleredResults) {
-      return getPageData<IPokemonNormalized[]>(
-        this.pageIndex,
-        this.perPage,
-        fitleredResults,
-      )
-    } else return this.pokeList
+
+    const data = fitleredResults
+      ? getPageData<IPokemonNormalized[]>(
+          this.pageIndex,
+          this.perPage,
+          fitleredResults,
+        )
+      : this.pokeList
+
+    if (data?.length) this.emptyMessage = null
+
+    return data
   }
 
   //if filtered get total from the fitlered results
@@ -165,6 +168,7 @@ export class PokeListComponent {
             this.pokeList = []
           }
           this.loading = false
+          this.emptyMessage = `Sorry! No results with the term ${value} was found.`
         },
         complete: () => (this.loading = false),
       })
