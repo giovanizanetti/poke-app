@@ -101,6 +101,10 @@ export class PokeListComponent {
     return this.typeFilters?.results?.length ?? this.count
   }
 
+  get showPagination() {
+    return this.listData.length >= this.pageSizeOptions[0] || this.pageIndex > 0
+  }
+
   async ngOnInit() {
     await this.fetchPokeList()
     await this.fetchTypes()
@@ -148,7 +152,7 @@ export class PokeListComponent {
   }
 
   searchByName(value: string) {
-    if(!value?.length) this.onClearSearchByName()
+    if (!value?.length) this.onClearSearchByName()
     this.loading = true
 
     this.typeFilters = null

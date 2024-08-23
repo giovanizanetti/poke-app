@@ -77,7 +77,7 @@
   </table>
 
   <mat-paginator
-    *ngIf="listData.length >= pageSizeOptions[0]"
+    *ngIf="showPagination"
     [length]="total"
     [pageSize]="perPage"
     [pageSizeOptions]="pageSizeOptions"
